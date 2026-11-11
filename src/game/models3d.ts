@@ -512,12 +512,21 @@ function batchCar(root: THREE.Group, keep?: (o: THREE.Mesh) => boolean): THREE.G
  * batched on its own and parented to an "active-wing" group whose origin is
  * the wing's leading bottom edge, so the renderer can raise and tilt it.
  */
-function splitBugattiWing(grounded: THREE.Group): THREE.Group {
+const isBugattiTrafficWing = (o: THREE.Mesh) => (o.material as THREE.Material).name.startsWith("Wing_");
+/** Playable Chiron: the rear spoiler nodes are named SK_Spoiler in the source file. */
+export const isChironSpoiler = (o: THREE.Object3D) => {
+  for (let n: THREE.Object3D | null = o; n; n = n.parent) if (/spoiler/i.test(n.name)) return true;
+  return false;
+};
+function splitBugattiWing(
+  grounded: THREE.Group,
+  isWing: (o: THREE.Mesh) => boolean = isBugattiTrafficWing,
+  keep?: (o: THREE.Mesh) => boolean,
+): THREE.Group {
   grounded.updateMatrixWorld(true);
   const sources: THREE.Mesh[] = [];
   grounded.traverse((o) => {
-    if (o instanceof THREE.Mesh && !Array.isArray(o.material) && o.material.name.startsWith("Wing_"))
-      sources.push(o);
+    if (o instanceof THREE.Mesh && !Array.isArray(o.material) && isWing(o)) sources.push(o);
   });
   const loose = new THREE.Group();
   for (const o of sources) {
@@ -528,7 +537,7 @@ function splitBugattiWing(grounded: THREE.Group): THREE.Group {
     loose.add(copy);
     o.removeFromParent();
   }
-  const body = batchCar(grounded);
+  const body = batchCar(grounded, keep);
   if (!sources.length) return body;
   const panel = batchCar(loose);
   const box = new THREE.Box3().setFromObject(panel);
@@ -594,6 +603,10 @@ export function loadCar(key: ModelKey): Promise<THREE.Group> {
           }
         });
         if (key === "bugatti") return splitBugattiWing(normalizeCar(scene, spec));
+        if (key === "chiron")
+          return splitBugattiWing(normalizeCar(scene, spec), isChironSpoiler, (o) =>
+            /tyre|rim/i.test((o.material as THREE.Material).name),
+          );
         // Revuelto wheels (tyre, rim, rotor, logo) stay unmerged so they can
         // spin; the caliper is bolted to the upright and does not turn.
         const result = batchCar(

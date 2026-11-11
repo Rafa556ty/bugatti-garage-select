@@ -289,6 +289,9 @@ export class Scene3D {
     if (!this.low) car.add(this.headL,this.headR,this.headL.target,this.headR.target);
     this.playerShadow = this.addContactShadow(this.scene,2.3,4.6);
     this.sunShadow = this.addContactShadow(this.scene,2.9,5.5); this.sunShadow.position.y=.016;
+    this.wing = car.getObjectByName("active-wing");
+    this.wingBaseY = this.wing?.position.y ?? 0;
+    this.wingRise = 0.14;
     this.player = car; this.scene.add(car);
     this.canvas.dataset["playerCar"] = "chiron";
   }
@@ -350,6 +353,8 @@ export class Scene3D {
 
   private player: THREE.Group | null = null;
   private wing: THREE.Object3D | undefined;
+  private wingBaseY = 0.96;
+  private wingRise = 0.17;
   private aero: AeroState = { lift: 0, tilt: 0 };
   private buildings: THREE.InstancedMesh | undefined;
   private rooftops: THREE.InstancedMesh | undefined;
@@ -1390,8 +1395,13 @@ export class Scene3D {
       }
       this.aero = stepAero(this.aero, s.player.speed, s.braking, dt);
       if (this.wing) {
-        this.wing.position.y = 0.96 + this.aero.lift * 0.17;
-        this.wing.rotation.x = this.aero.tilt;
+        this.wing.position.y = this.wingBaseY + this.aero.lift * this.wingRise;
+        // Revuelto wing tilts as one; the Chiron's hydraulic strut only rises.
+        for (const part of this.wing.children) {
+          if (part.userData["strut"]) part.position.y = -this.aero.lift * this.wingRise * 0.45;
+          else if (this.playerKey === "chiron") part.rotation.x = this.aero.tilt;
+        }
+        if (this.playerKey !== "chiron") this.wing.rotation.x = this.aero.tilt;
         for (const support of p.children.filter((c) => c.name === "wing-support")) {
           support.visible = this.aero.lift > 0.02;
           support.scale.y = this.aero.lift;
