@@ -364,6 +364,11 @@ function batchCar(root: THREE.Group, keep?: (o: THREE.Mesh) => boolean): THREE.G
     { material: THREE.Material; geometries: THREE.BufferGeometry[] }
   >();
   const extras: THREE.Mesh[] = [];
+  // Split wheels by the car's own centre: a model with one mesh per wheel
+  // must not be cut in half around that wheel's centre.
+  const carBox = new THREE.Box3().setFromObject(root);
+  const carMidX = (carBox.min.x + carBox.max.x) / 2;
+  const carMidZ = (carBox.min.z + carBox.max.z) / 2;
   root.traverse((o) => {
     if (!(o instanceof THREE.Mesh) || Array.isArray(o.material)) return;
     const geo = o.geometry.clone();
@@ -405,9 +410,7 @@ function batchCar(root: THREE.Group, keep?: (o: THREE.Mesh) => boolean): THREE.G
       // (tyre, rim, rotor, logo) centred on the car. Split each part into
       // the four corners so every wheel spins around its own hub.
       const pos = geo.getAttribute("position");
-      geo.computeBoundingBox();
-      const bb = geo.boundingBox!;
-      const zMid = (bb.min.z + bb.max.z) / 2;
+      const zMid = carMidZ;
       const index = geo.getIndex();
       const triCount = (index ? index.count : pos.count) / 3;
       const vi = (t: number, k: number) => (index ? index.getX(t * 3 + k) : t * 3 + k);
@@ -418,7 +421,7 @@ function batchCar(root: THREE.Group, keep?: (o: THREE.Mesh) => boolean): THREE.G
         const c = vi(t, 2);
         const cx = (pos.getX(a) + pos.getX(b) + pos.getX(c)) / 3;
         const cz = (pos.getZ(a) + pos.getZ(b) + pos.getZ(c)) / 3;
-        buckets[(cx < 0 ? 0 : 1) + (cz < zMid ? 0 : 2)]!.push(a, b, c);
+        buckets[(cx < carMidX ? 0 : 1) + (cz < zMid ? 0 : 2)]!.push(a, b, c);
       }
       for (const bucket of buckets) {
         if (!bucket.length) continue;
@@ -438,7 +441,7 @@ function batchCar(root: THREE.Group, keep?: (o: THREE.Mesh) => boolean): THREE.G
         const center = wb.getCenter(new THREE.Vector3());
         compact.translate(-center.x, -center.y, -center.z);
         const mesh = new THREE.Mesh(compact, material);
-        mesh.name = `${o.name}_${center.x < 0 ? "L" : "R"}${center.z < zMid ? "F" : "R"}`;
+        mesh.name = `${o.name}_${center.x < carMidX ? "L" : "R"}${center.z < zMid ? "F" : "R"}`;
         mesh.position.copy(center);
         mesh.castShadow = true;
         mesh.userData["wheel"] = true;
