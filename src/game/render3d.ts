@@ -1068,6 +1068,7 @@ export class Scene3D {
 
     this.player = car;
     this.wing = car.getObjectByName("active-wing");
+    this.wingBaseY = 0.96; this.wingRise = 0.17;
     this.scene.add(car);
   }
 
