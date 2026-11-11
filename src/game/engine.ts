@@ -5,6 +5,7 @@ import {
   TRAFFIC_KEEP_AHEAD,
   TRAFFIC_KEEP_BEHIND,
   pickTrafficType,
+  shouldForceBugatti,
   laneMotion,
   trafficScreenY,
   isSportCar,
@@ -289,6 +290,7 @@ export class RacingEngine {
   };
 
   private traffic: TrafficCar[] = [];
+  private lastBugattiZ: number | null = null;
   private particles: Particle[] = [];
   private streaks: { x: number; y: number; len: number }[] = [];
   private scroll = 0;
@@ -462,6 +464,7 @@ export class RacingEngine {
     p.speed = 0;
     this.pz = 0;
     this.distance = 0;
+    this.lastBugattiZ = null;
     this.topSpeed = 0;
     this.currentGear = 1;
     this.lastGear = 1;
@@ -1363,7 +1366,14 @@ export class RacingEngine {
           },
         ];
 
-    const type = pickTrafficType(Math.random(), Math.random(), this.traffic.at(-1)?.type);
+    let type = pickTrafficType(Math.random(), Math.random(), this.traffic.at(-1)?.type);
+    if (this.threeD) {
+      const bugattis = this.traffic.filter((c) => c.type === "bugatti-chiron");
+      const lastZ = bugattis.length ? Math.max(...bugattis.map((c) => c.z)) : this.lastBugattiZ;
+      if (type === "bugatti-chiron" && lastZ !== null && Math.abs(z - lastZ) < 350) type = "sedan";
+      else if (shouldForceBugatti(bugattis.length, z, lastZ)) type = "bugatti-chiron";
+      if (type === "bugatti-chiron") this.lastBugattiZ = z;
+    }
     const pick = this.threeD
       ? vehiclePool.find((v) => v.type === type)
       : vehiclePool[Math.floor(Math.random() * vehiclePool.length)];

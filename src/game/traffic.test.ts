@@ -70,3 +70,9 @@ describe("traffic always leaves a way through", () => {
     expect(worst).toBeGreaterThan(CAR * 2.4);
   });
 });
+
+import { shouldForceBugatti } from './traffic-rules';
+describe('Bugatti presence', () => {
+  it('forces a Bugatti when fewer than 2 are on the road and far from the last', () => { expect(shouldForceBugatti(0, 500, null)).toBe(true); expect(shouldForceBugatti(1, 900, 400)).toBe(true); });
+  it('never puts two Bugattis in the same view or more than 2', () => { expect(shouldForceBugatti(1, 600, 400)).toBe(false); expect(shouldForceBugatti(2, 2000, 400)).toBe(false); });
+});
