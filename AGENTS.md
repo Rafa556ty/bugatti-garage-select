@@ -44,3 +44,4 @@ use the editor.
 - Traffic car light signatures and wipers live in src/game/vehicle-lights.ts as instanced overlays (one batch per model) — keeps draw calls flat.
 - New owner-supplied media uses CDN asset pointers; traffic-audio.ts owns distance-limited Web Audio voices driven by engine telemetry to keep per-frame audio outside React.
 - CarStore is an in-game DEMO overlay backed by a pure catalog; selections show the availability notice and never charge coins or unlock vehicles.
+- Playable Chiron's rear spoiler (nodes named SK_Spoiler) is split into an `active-wing` group by `splitBugattiWing`, driven by the same `stepAero` as the Revuelto; render3d keeps per-car wing base height/rise.
