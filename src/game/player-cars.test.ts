@@ -21,3 +21,9 @@ describe('Playable Chiron rules', () => {
     expect(choosePlayerCar(back, 'chiron').selectedCar).toBe('chiron');
   });
 });
+import { loadGarage as _load, saveGarage as _save } from './player-cars';
+describe('garage persistence', () => {
+  const mem = () => { const m = new Map<string, string>(); return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => { m.set(k, v); } }; };
+  it('keeps the claimed Chiron selected after reload', () => { const s = mem(); _save(s, { chironOwned: true, selectedCar: 'chiron' }); expect(_load(s)).toEqual({ chironOwned: true, selectedCar: 'chiron' }); });
+  it('never selects an unclaimed Chiron', () => { const s = mem(); s.setItem('garage-state-v1', JSON.stringify({ chironOwned: false, selectedCar: 'chiron' })); expect(_load(s).selectedCar).toBe('revuelto'); });
+});
