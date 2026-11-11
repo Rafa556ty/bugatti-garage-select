@@ -18,6 +18,12 @@ export const BMW_CHANCE = SPORT_SLOT / 2;
 export const BUGATTI_CHANCE = BMW_CHANCE / 3;
 /** Ferrari SF90 Stradale: rare, but more common than the Bugatti. */
 export const FERRARI_CHANCE = BMW_CHANCE / 2;
+/** Keep a couple of Bugattis on the road, never two in the same view. */
+export const BUGATTI_MIN_ON_ROAD = 2;
+export const BUGATTI_MIN_GAP = 350;
+export function shouldForceBugatti(onRoad: number, spawnZ: number, lastBugattiZ: number | null) {
+  return onRoad < BUGATTI_MIN_ON_ROAD && (lastBugattiZ === null || Math.abs(spawnZ - lastBugattiZ) >= BUGATTI_MIN_GAP);
+}
 const SPORT = new Set<CarType>([
   "mustang-blue",
   "mustang-black",
