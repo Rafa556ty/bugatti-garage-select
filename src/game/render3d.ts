@@ -276,7 +276,7 @@ export class Scene3D {
     this.engineBrakeLight = null; this.wing = undefined; this.chironRig = null;
     this.playerKey = key;
     this.setupPlayer(template.clone(true));
-    this.canvas.dataset.playerCar = key;
+    this.canvas.dataset["playerCar"] = key;
   }
 
   private setupChiron(car: THREE.Group) {
@@ -290,7 +290,7 @@ export class Scene3D {
     this.playerShadow = this.addContactShadow(this.scene,2.3,4.6);
     this.sunShadow = this.addContactShadow(this.scene,2.9,5.5); this.sunShadow.position.y=.016;
     this.player = car; this.scene.add(car);
-    this.canvas.dataset.playerCar = "chiron";
+    this.canvas.dataset["playerCar"] = "chiron";
   }
   private low = phoneProfile({
     userAgent: navigator.userAgent,

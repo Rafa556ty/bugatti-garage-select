@@ -202,8 +202,8 @@ export function GarageViewer({ labels, onClose, selectedCar, chironOwned, onSele
       };
       frame();
 
-      container.dataset.sceneReady = "true";
-      container.dataset.car = selectedCar;
+      container.dataset["sceneReady"] = "true";
+      container.dataset["car"] = selectedCar;
       setStatus("ready");
 
       teardown = () => {
