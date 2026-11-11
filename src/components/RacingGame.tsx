@@ -44,9 +44,7 @@ import bullEmblem from "@/assets/bull-emblem.png";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { GarageViewer } from "@/components/GarageViewer";
-import { useServerFn } from "@tanstack/react-start";
-import { garageAction } from "@/game/garage.functions";
-import { DEFAULT_GARAGE, type PlayerCar, type GarageState } from "@/game/player-cars";
+import { DEFAULT_GARAGE, claimChiron, choosePlayerCar, loadGarage, saveGarage, type PlayerCar, type GarageState } from "@/game/player-cars";
 import { CarStore } from '@/components/CarStore';
 import { GameAudio } from "@/game/audio";
 import {
@@ -113,33 +111,27 @@ export function RacingGame() {
   const [garageBusy, setGarageBusy] = useState(true);
   const [garageError, setGarageError] = useState("");
   const [confirmChiron, setConfirmChiron] = useState(false);
-  const garageToken = useRef("");
   const selectedCarRef = useRef<PlayerCar>("revuelto");
-  const callGarage = useServerFn(garageAction);
   useEffect(() => {
     let cancelled = false;
-    let token = localStorage.getItem("garage-guest-token");
-    if (!token || !/^[a-f0-9]{64}$/.test(token)) {
-      token = Array.from(crypto.getRandomValues(new Uint8Array(32)), n => n.toString(16).padStart(2, "0")).join("");
-      localStorage.setItem("garage-guest-token", token);
-    }
-    garageToken.current = token;
-    callGarage({ data: { token, action: "read" } }).then(async saved => {
-      if (cancelled) return;
-      selectedCarRef.current = saved.selectedCar;
+    const saved = loadGarage(localStorage);
+    selectedCarRef.current = saved.selectedCar;
+    (async () => {
       await scene3dRef.current?.selectPlayerCar(saved.selectedCar);
+      if (cancelled) return;
       audioRef.current?.setPlayerCar(saved.selectedCar);
       setGarage(saved);
-    }).catch(() => { if (!cancelled) setGarageError("Não foi possível carregar sua garagem. Tente novamente."); })
+    })().catch(() => { if (!cancelled) setGarageError("Não foi possível carregar sua garagem. Tente novamente."); })
       .finally(() => { if (!cancelled) setGarageBusy(false); });
     return () => { cancelled = true; };
-  }, [callGarage]);
+  }, []);
   const selectCar = async (car: PlayerCar, confirmed = false) => {
     if (garageBusy) return;
     if (car === "chiron" && !garage.chironOwned && !confirmed) { setConfirmChiron(true); return; }
     setGarageBusy(true); setGarageError("");
     try {
-      const saved = await callGarage({ data: { token: garageToken.current, action: confirmed ? "claim" : "select", car, confirmed } });
+      const saved = confirmed ? claimChiron(garage, true) : choosePlayerCar(garage, car);
+      saveGarage(localStorage, saved);
       await scene3dRef.current?.selectPlayerCar(saved.selectedCar);
       selectedCarRef.current = saved.selectedCar;
       audioRef.current?.setPlayerCar(saved.selectedCar);
