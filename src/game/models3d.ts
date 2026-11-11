@@ -611,8 +611,8 @@ export function loadCar(key: ModelKey): Promise<THREE.Group> {
         // spin; the caliper is bolted to the upright and does not turn.
         const result = batchCar(
           normalizeCar(scene, spec),
-          key === "revuelto" || key === "chiron"
-            ? (o) => key === "chiron" ? /tyre|rim/i.test((o.material as THREE.Material).name) : o.name.startsWith("Wheel_") && !o.name.includes("Caliper")
+          key === "revuelto"
+            ? (o) => o.name.startsWith("Wheel_") && !o.name.includes("Caliper")
             : undefined,
         );
         if (key === "revuelto") isolateActiveWing(result);
