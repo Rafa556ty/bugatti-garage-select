@@ -138,7 +138,7 @@ export function GarageViewer({ labels, onClose, selectedCar, chironOwned, onSele
       const frameDistance = () => {
         const halfVertical = Math.tan((camera.fov * Math.PI) / 360);
         const halfHorizontal = halfVertical * camera.aspect;
-        return Math.max(carLength / 2 / halfHorizontal, carHeight / 2 / halfVertical) * 1.12;
+        return Math.max(carLength / 2 / halfHorizontal, carHeight / 2 / halfVertical) * 1.4;
       };
 
       let baseDistance = frameDistance();
